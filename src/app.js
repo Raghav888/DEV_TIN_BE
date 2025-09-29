@@ -28,10 +28,38 @@ app.post('/signup', async (req, res) => {
 // get all users from db
 app.get('/feed', async (req, res) => {
     try {
+        // get all data from User collection
         const feeds = await User.find({});
         res.status(200).send(feeds)
     } catch (err) {
         res.status(500).send("Error while retriving all data" + err.message)
+    }
+})
+
+app.delete('/user', async (req, res) => {
+    try {
+        const id = req.body.id;
+        const userDeleted = await User.findByIdAndDelete(id)
+        if (!userDeleted) {
+            res.status(404).send("User not found")
+        } else {
+            res.status(200).send("User deleted")
+        }
+    } catch (err) {
+        res.status(500).send("Error while deleting " + err.message)
+    }
+})
+
+app.patch('/user', async (req, res) => {
+    // if the field doesnt exist in model then it will not add that in db
+    try {
+        const id = req.body.id;
+        const body = req.body;
+        await User.findByIdAndUpdate(id, body);
+        res.status(200).send("Updated successfully")
+
+    } catch (err) {
+        res.status(500).send("Error while updating" + err.message)
     }
 })
 
