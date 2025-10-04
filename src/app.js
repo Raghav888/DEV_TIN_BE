@@ -50,16 +50,23 @@ app.delete('/user', async (req, res) => {
     }
 })
 
-app.patch('/user', async (req, res) => {
+app.patch('/user/:userId', async (req, res) => {
     // if the field doesnt exist in model then it will not add that in db
+    // api level validation
+    const ALLOWED_FIELD_TO_UPDATE = ['firstName', "lastName", "password", "age", "photoUrl", "skills", "about"]
+    const isUpdateAllowed = Object.keys(req.body).every(key => ALLOWED_FIELD_TO_UPDATE.includes(key));
+
     try {
-        const id = req.body.id;
+        if (!isUpdateAllowed) {
+            throw new Error("Fields update not allowed")
+        }
+        const id = req.params.userId;
         const body = req.body;
-        await User.findByIdAndUpdate(id, body);
+        await User.findByIdAndUpdate(id, body, { runValidators: true });
         res.status(200).send("Updated successfully")
 
     } catch (err) {
-        res.status(500).send("Error while updating" + err.message)
+        res.status(500).send("Error while updating " + err.message)
     }
 })
 
