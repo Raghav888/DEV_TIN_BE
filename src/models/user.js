@@ -2,6 +2,9 @@
 
 const mongoose = require('mongoose');
 const validator = require('validator')
+const jwt = require("jsonwebtoken")
+const bcrypt = require("bcrypt")
+
 const userSchema = new mongoose.Schema({
     firstName: {
         type: String,
@@ -63,6 +66,24 @@ const userSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
+
+// never use arrow function as this works differently in arrow function
+userSchema.methods.getJWT = async function () {
+    // here this refers to document that is founded
+    userDetails = this;
+    // create json token, first param we are sending is id
+    // so that token has id hidden inside it and later we can use it to find user.
+    // second param is secret key that we are sending -> developer defined it is
+    // third param is about token expira duration
+    const token = await jwt.sign({ _id: userDetails._id }, "dev_Tinder@9864", { expiresIn: '1d' })
+    return token;
+}
+
+userSchema.methods.checkPasswordIsCorrect = async function (passwordInputByUser) {
+    const userDetails = this;
+    const isCorrect = await bcrypt.compare(passwordInputByUser, userDetails.password);
+    return isCorrect
+}
 
 // should start with capital letter only
 const User = mongoose.model('User', userSchema);
