@@ -1,7 +1,9 @@
 const express = require('express');
+const bcrypt = require("bcrypt")
 const connectDB = require('./config/database')
 const User = require('./models/user');
 const { adminAuth } = require('./middlewares/auth');
+const { validateSignUpData, validateEmailIdAndPassword } = require("./utils/validations")
 
 const app = express();
 
@@ -15,13 +17,43 @@ app.use(adminAuth);
 
 app.post('/signup', async (req, res) => {
     try {
+        // validation of data - api level
+        validateSignUpData(req);
+
+        const { firstName, lastName, emailId, password, age, gender } = req.body;
+
+        // hashing of password - takes password and salt. salt should be high so that encryption is also higher layer
+        const hashedPassword = await bcrypt.hashSync(password, 10);
         // create a new instance of User model
-        const user = new User(req.body)
+        const user = new User({
+            firstName, lastName, emailId, password: hashedPassword, age, gender
+        })
         await user.save();
         res.status(200).send("User added successfully")
     }
     catch (err) {
-        res.status(500).send("Error while saving" + err.message)
+        res.status(500).send("Error while saving " + err.message)
+    }
+})
+
+app.post('/login', async (req, res) => {
+
+    try {
+        validateEmailIdAndPassword(req)
+        const { password, emailId } = req.body;
+        const userDetails = await User.findOne({ emailId })
+        if (!userDetails) {
+            // always send generic error, dont say exactly email is wrong or pass is wrong
+            throw new Error("Invalid credentails")
+        }
+        const isPasswordCorrect = await bcrypt.compare(password, userDetails.password)
+        if (isPasswordCorrect) {
+            res.send("User logged in successfully")
+        } else {
+            throw new Error("Invalid credentails")
+        }
+    } catch (err) {
+        res.status(400).send("Unable to login: " + err.message)
     }
 })
 
@@ -58,7 +90,7 @@ app.patch('/user/:userId', async (req, res) => {
 
     try {
         if (!isUpdateAllowed) {
-            throw new Error("Fields update not allowed")
+            res.status(400).send("Fields update not allowed");
         }
         const id = req.params.userId;
         const body = req.body;
