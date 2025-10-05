@@ -2,8 +2,11 @@ const express = require('express');
 const bcrypt = require("bcrypt")
 const connectDB = require('./config/database')
 const User = require('./models/user');
-const { adminAuth } = require('./middlewares/auth');
+const { userAuth } = require('./middlewares/auth');
 const { validateSignUpData, validateEmailIdAndPassword } = require("./utils/validations")
+const cookieParser = require("cookie-parser")
+const jwt = require('jsonwebtoken');
+
 
 const app = express();
 
@@ -12,8 +15,9 @@ const app = express();
 // as route is not first param, so it work for all routes
 // if we give route as 1st param then it ll work only for that route.
 app.use(express.json())
+// using cookie-aprser middleware so that we can read cookie
+app.use(cookieParser())
 
-app.use(adminAuth);
 
 app.post('/signup', async (req, res) => {
     try {
@@ -48,12 +52,31 @@ app.post('/login', async (req, res) => {
         }
         const isPasswordCorrect = await bcrypt.compare(password, userDetails.password)
         if (isPasswordCorrect) {
+            // create json token, first param we are sending is id
+            // so that token has id hidden inside it and later we can use it to find user.
+            // second param is secret key that we are sending -> developer defined it is
+            // third param is about token expira duration
+            const token = await jwt.sign({ _id: userDetails._id }, "dev_Tinder@9864", { expiresIn: '1d' })
+            // add token to cookie
+            res.cookie("token", token, { expires: new Date(Date.now() + 900000), httpOnly: true, secure: true })
             res.send("User logged in successfully")
         } else {
             throw new Error("Invalid credentails")
         }
     } catch (err) {
         res.status(400).send("Unable to login: " + err.message)
+    }
+})
+
+app.use(userAuth);
+
+app.get("/profile", async (req, res) => {
+    try {
+        const userDetails = req.user;
+        const { firstName, lastName, emailId, age, gender, skills, about, photoUrl } = userDetails;
+        res.send({ firstName, lastName, emailId, age, gender, skills, about, photoUrl })
+    } catch (err) {
+        res.status(400).send("Error: " + err)
     }
 })
 

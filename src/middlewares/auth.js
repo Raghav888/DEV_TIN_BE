@@ -1,12 +1,30 @@
-// middleware to check if user is authenticated to vist admin routes
-// every request to /admin/* will go through this middleware
-const adminAuth = (req, res, next) => {
-    const isAuthenticated = true; // This should be replaced with real authentication logic
-    if (isAuthenticated) {
+const jwt = require('jsonwebtoken');
+const User = require('../models/user');
+
+const userAuth = async (req, res, next) => {
+    try {
+        // read cookies
+        const cookies = req.cookies;
+        const { token } = cookies;
+        if (!token) {
+            throw new Error("Invalid token")
+        }
+        // decode token
+        const decoded = await jwt.verify(token, 'dev_Tinder@9864');
+        // it will return same value that we sent as first param while creating token
+        // in our case it will {_id:...}
+        const { _id } = decoded;
+        // get user details
+        const userDetails = await User.findById(_id);
+        if (!userDetails) {
+            throw new Error("Profile not found")
+        }
+        // attaching userDetails to req, so that next middlerware will have access to it.
+        req.user = userDetails;
         next();
-    } else {
-        res.status(401).send('unauthorized');
+    } catch (err) {
+        res.status(400).send("Not able to auth: " + err.message);
     }
 }
 
-module.exports = { adminAuth }
+module.exports = { userAuth }
