@@ -1,6 +1,6 @@
 const validator = require("validator")
 const validateSignUpData = (req) => {
-    const { firstName, lastName, emaildId, password } = req.body;
+    const { firstName, lastName } = req.body;
     if (!firstName || !lastName) throw new Error("First name or last name is missing");
 }
 
@@ -13,4 +13,11 @@ const validateEmailIdAndPassword = (req) => {
         throw new Error("Please enter password")
     }
 }
-module.exports = { validateSignUpData, validateEmailIdAndPassword }
+
+const validateEditProfileData = (req) => {
+    // if the field doesnt exist in model then it will not add that in db
+    // api level validation
+    const ALLOWED_FIELD_TO_UPDATE = ['firstName', "lastName", "age", "photoUrl", "skills", "about"]
+    return Object.keys(req.body).every(key => ALLOWED_FIELD_TO_UPDATE.includes(key));
+}
+module.exports = { validateSignUpData, validateEmailIdAndPassword, validateEditProfileData }
