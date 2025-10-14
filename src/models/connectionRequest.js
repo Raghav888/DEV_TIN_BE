@@ -4,11 +4,13 @@ const mongoose = require('mongoose');
 const connectRequestSchema = new mongoose.Schema({
     requestFromId: {
         type: mongoose.Schema.Types.ObjectId,
-        required: true
+        required: true,
+        ref: "User" // creating a reference to User Collection // like aforiegn key we have in sql
     },
     requestToId: {
         type: mongoose.Schema.Types.ObjectId,
-        required: true
+        required: true,
+        ref: "User" // creating a reference to User Collection // like aforiegn key we have in sql
     },
     status: {
         type: String,

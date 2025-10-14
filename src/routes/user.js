@@ -1,17 +1,92 @@
-const express = require("express")
-const { userAuth } = require('../middlewares/auth');
-const User = require('../models/user');
+const express = require("express");
+const { userAuth } = require("../middlewares/auth");
+const User = require("../models/user");
+const ConnectionRequest = require("../models/connectionRequest");
 const router = express.Router();
 
-// return all user from db
-router.get('/feed', userAuth, async (req, res) => {
-    try {
-        // get all data from User collection
-        const feeds = await User.find({});
-        res.status(200).send(feeds)
-    } catch (err) {
-        res.status(500).send("Error while retriving all data" + err.message)
-    }
-})
+const USER_SAFE_DATA = [
+    "firstName",
+    "lastName",
+    "age",
+    "gender",
+    "photoUrl",
+    "about",
+];
 
-module.exports = router
+router.get("/requests/received", userAuth, async (req, res) => {
+    try {
+        const id = req.user._id;
+        // .populate takes first param as fieldName from ConnectionRequest which has ref, so it will take data from its ref schema
+        // and second param takes array which has fields name that needs to picked up from the other schema
+        const connectionRequests = await ConnectionRequest.find({
+            requestToId: id,
+            status: "interested",
+        }).populate("requestFromId", USER_SAFE_DATA);
+
+        // bcuz we only want data of requestFromId key
+        const data = connectionRequests.map(
+            (connection) => connection.requestFromId
+        );
+
+        res.status(200).json({ data });
+    } catch (error) {
+        res.status(500).send("Failed to get requests " + error);
+    }
+});
+
+router.get("/connections", userAuth, async (req, res) => {
+    try {
+        const id = req.user._id;
+        const connections = await ConnectionRequest.find({
+            $or: [
+                { requestFromId: id, status: "accepted" },
+                { requestToId: id, status: "accepted" },
+            ],
+        })
+            .populate("requestFromId", USER_SAFE_DATA) // if we get only requestFromId then we wont see profile of other users to
+            // whom curr user has sent the connection. so we need to get requestToId to populate as well
+            .populate("requestToId", USER_SAFE_DATA);
+        // and when requestFromId is curr user Id, then we need to get data of requestToId  and in vice versa to get requestFromId
+        const data = connections.map((connection) =>
+            connection.requestFromId.equals(id)
+                ? connection.requestToId
+                : connection.requestFromId
+        );
+
+        res.status(200).json({ message: "connection", data });
+    } catch (error) {
+        res.status(500).send("Failed to get connections " + error);
+    }
+});
+
+// return all user from db - IMP API
+router.get("/feed", userAuth, async (req, res) => {
+    try {
+        // user should see all users cards excepts
+        // 1. his own card
+        // 2. his connections
+        // 3. igbored people
+        // 4. already send connection
+        // basically all user which are in connectionRequestDB should be avoided from feed
+        const id = req.user._id;
+        // find all connection requests (sent + recevied)
+        const connectionRequests = await ConnectionRequest.find({
+            $or: [{ requestFromId: id }, { requestToId: id }],
+        }).select(["requestFromId", "requestToId"]); // it selects only those field from doc 
+
+        const connectedIds = new Set();
+
+        connectionRequests.forEach(req => {
+            connectedIds.add(req.requestFromId);
+            connectedIds.add(req.requestToId);
+        })
+
+        // get all data from User collection where ids are not equal to any user id.
+        const feeds = await User.find({ _id: { $nin: Array.from(connectedIds) } }).select(USER_SAFE_DATA);
+        res.status(200).json({ message: "feeds", data: feeds });
+    } catch (err) {
+        res.status(500).send("Error while retriving all data" + err.message);
+    }
+});
+
+module.exports = router;

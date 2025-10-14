@@ -36,4 +36,26 @@ router.post("/send/:status/:toUserId", userAuth, async (req, res) => {
     }
 })
 
+router.post("/review/:status/:requestId", userAuth, async (req, res) => {
+    try {
+        const { status, requestId } = req.params;
+        if (!["accepted", "rejected"].includes(status)) {
+            return res.status(400).json({ message: "Status is incorrect" })
+        }
+
+        const currentUser = req.user;
+        // as requestToId should be of curr user as they can accept or reject
+        // status should be interested , if its ignored then they cannot accept or reject it
+        // and through requestid only we can find the request from db
+        const connectionRequest = await ConnectionRequestModel.findOne({ _id: requestId, requestToId: currentUser._id, status: "interested" });
+        if (!connectionRequest) {
+            return res.status(404).json({ message: "No such record found" })
+        }
+        connectionRequest.status = status;
+        await connectionRequest.save();
+        return res.status(200).json({ message: status })
+    } catch (err) {
+        res.status(500).json({ message: " Unable to perform action " + err })
+    }
+})
 module.exports = router;
