@@ -2,16 +2,9 @@ const express = require("express");
 const { userAuth } = require("../middlewares/auth");
 const User = require("../models/user");
 const ConnectionRequest = require("../models/connectionRequest");
+const { USER_SAFE_DATA } = require("./constants");
 const router = express.Router();
 
-const USER_SAFE_DATA = [
-    "firstName",
-    "lastName",
-    "age",
-    "gender",
-    "photoUrl",
-    "about",
-];
 
 router.get("/requests/received", userAuth, async (req, res) => {
     try {

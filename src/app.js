@@ -3,7 +3,10 @@ const connectDB = require('./config/database')
 const cookieParser = require("cookie-parser")
 
 const app = express();
+const cors = require('cors');
 
+// read abouts cors in self docs of nodejs
+app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 // we cannot read body of request directly, if we dont pass request from below middleware
 // it converts the body to from json to js object
 // as route is not first param, so it work for all routes

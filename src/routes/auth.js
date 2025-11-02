@@ -1,7 +1,7 @@
 const express = require("express")
 const bcrypt = require("bcrypt")
 const User = require('../models/user');
-const { validateSignUpData, validateEmailIdAndPassword } = require("../utils/validations")
+const { validateSignUpData, validateEmailIdAndPassword } = require("../utils/validations");
 
 const router = express.Router();
 
@@ -43,7 +43,7 @@ router.post('/login', async (req, res) => {
             const token = await userDetails.getJWT();
             // add token to cookie
             res.cookie("token", token, { expires: new Date(Date.now() + 900000), httpOnly: true, secure: true })
-            res.send("User logged in successfully")
+            res.json({ messgae: "User logged in successfully", data: userDetails })
         } else {
             throw new Error("Invalid credentails")
         }
