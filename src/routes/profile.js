@@ -10,7 +10,7 @@ router.get("/view", userAuth, async (req, res) => {
     try {
         const userDetails = req.user;
         const { firstName, lastName, emailId, age, gender, skills, about, photoUrl } = userDetails;
-        res.send({ firstName, lastName, emailId, age, gender, skills, about, photoUrl })
+        res.json({ messgae: "user profile", data: { firstName, lastName, emailId, age, gender, skills, about, photoUrl } })
     } catch (err) {
         res.status(400).send("Error: " + err)
     }
