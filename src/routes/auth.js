@@ -48,7 +48,7 @@ router.post('/login', async (req, res) => {
             throw new Error("Invalid credentails")
         }
     } catch (err) {
-        res.status(400).send("Unable to login: " + err.message)
+        res.status(400).json({ message: err.message })
     }
 })
 

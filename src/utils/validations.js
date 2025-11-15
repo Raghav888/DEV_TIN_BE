@@ -17,7 +17,7 @@ const validateEmailIdAndPassword = (req) => {
 const validateEditProfileData = (req) => {
     // if the field doesnt exist in model then it will not add that in db
     // api level validation
-    const ALLOWED_FIELD_TO_UPDATE = ['firstName', "lastName", "age", "photoUrl", "skills", "about"]
+    const ALLOWED_FIELD_TO_UPDATE = ['firstName', "lastName", "age", "photoUrl", "skills", "about", "gender"]
     return Object.keys(req.body).every(key => ALLOWED_FIELD_TO_UPDATE.includes(key));
 }
 module.exports = { validateSignUpData, validateEmailIdAndPassword, validateEditProfileData }
