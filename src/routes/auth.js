@@ -19,7 +19,10 @@ router.post('/signup', async (req, res) => {
             firstName, lastName, emailId, password: hashedPassword, age, gender
         })
         await user.save();
-        res.status(200).send("User added successfully")
+        const token = await user.getJWT();
+        // add token to cookie
+        res.cookie("token", token, { expires: new Date(Date.now() + 900000), httpOnly: true, secure: true })
+        res.json({ messgae: "User signed up successfully", data: { ...user._doc, password: undefined } })
     }
     catch (err) {
         res.status(500).send("Error while saving " + err.message)
@@ -43,7 +46,7 @@ router.post('/login', async (req, res) => {
             const token = await userDetails.getJWT();
             // add token to cookie
             res.cookie("token", token, { expires: new Date(Date.now() + 900000), httpOnly: true, secure: true })
-            res.json({ messgae: "User logged in successfully", data: userDetails })
+            res.json({ messgae: "User logged in successfully", data: { ...userDetails, password: undefined } })
         } else {
             throw new Error("Invalid credentails")
         }
