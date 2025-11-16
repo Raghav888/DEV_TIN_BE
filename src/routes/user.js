@@ -16,12 +16,8 @@ router.get("/requests/received", userAuth, async (req, res) => {
             status: "interested",
         }).populate("requestFromId", USER_SAFE_DATA);
 
-        // bcuz we only want data of requestFromId key
-        const data = connectionRequests.map(
-            (connection) => connection.requestFromId
-        );
 
-        res.status(200).json({ data });
+        res.status(200).json({ data: connectionRequests });
     } catch (error) {
         res.status(500).send("Failed to get requests " + error);
     }

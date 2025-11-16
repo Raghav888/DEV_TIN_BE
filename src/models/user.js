@@ -48,7 +48,7 @@ const userSchema = new mongoose.Schema({
     },
     photoUrl: {
         type: String,
-        default: "https://media.istockphoto.com/id/1326784308/vector/front-view-of-a-neutral-gender-human-body-silhouette.jpg?s=612x612&w=0&k=20&c=ZvZft2dFAxo56PP4GxOk6V3YXwE6SZxwRS8JF6hNPq8=",
+        default: "https://avatar.iran.liara.run/public",
     },
     skills: {
         type: [String],
