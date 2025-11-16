@@ -75,7 +75,7 @@ userSchema.methods.getJWT = async function () {
     // so that token has id hidden inside it and later we can use it to find user.
     // second param is secret key that we are sending -> developer defined it is
     // third param is about token expira duration
-    const token = await jwt.sign({ _id: userDetails._id }, "dev_Tinder@9864", { expiresIn: '1d' })
+    const token = await jwt.sign({ _id: userDetails._id }, process.env.JWT_SECRET, { expiresIn: '1d' })
     return token;
 }
 

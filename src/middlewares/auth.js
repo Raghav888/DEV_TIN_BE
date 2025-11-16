@@ -10,7 +10,7 @@ const userAuth = async (req, res, next) => {
             return res.status(401).send("Please login");
         }
         // decode token
-        const decoded = await jwt.verify(token, 'dev_Tinder@9864');
+        const decoded = await jwt.verify(token, process.env.JWT_SECRET);
         // it will return same value that we sent as first param while creating token
         // in our case it will {_id:...}
         const { _id } = decoded;

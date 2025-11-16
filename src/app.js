@@ -4,6 +4,8 @@ const cookieParser = require("cookie-parser")
 
 const app = express();
 const cors = require('cors');
+const env = require('dotenv');
+env.config();
 
 // read abouts cors in self docs of nodejs
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
@@ -27,8 +29,8 @@ app.use('/user', userRouter);
 
 // doing in this way so that first our db is connected then only server starts listening.
 connectDB().then(() => {
-    app.listen(3000, () => {
-        console.log('Server is running on port 3000');
+    app.listen(process.env.PORT, () => {
+        console.log('Server is running on port ' + process.env.PORT);
     });
     console.log("Connected to DB")
 }).catch(() => console.log("Failed to connect to DB"))
