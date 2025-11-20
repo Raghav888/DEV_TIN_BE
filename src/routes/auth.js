@@ -21,7 +21,7 @@ router.post('/signup', async (req, res) => {
         await user.save();
         const token = await user.getJWT();
         // add token to cookie
-        res.cookie("token", token, { expires: new Date(Date.now() + 900000), httpOnly: true, secure: true })
+        res.cookie("token", token, { expires: new Date(Date.now() + 900000), httpOnly: true, secure: false })
         res.json({ messgae: "User signed up successfully", data: { ...user._doc, password: undefined } })
     }
     catch (err) {
@@ -45,7 +45,7 @@ router.post('/login', async (req, res) => {
             //getJWT method is offloaded method to schema USER
             const token = await userDetails.getJWT();
             // add token to cookie
-            res.cookie("token", token, { expires: new Date(Date.now() + 900000), httpOnly: true, secure: true })
+            res.cookie("token", token, { expires: new Date(Date.now() + 900000), httpOnly: true, secure: false })
             res.json({ messgae: "User logged in successfully", data: { ...userDetails, password: undefined } })
         } else {
             throw new Error("Invalid credentails")
