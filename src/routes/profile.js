@@ -9,8 +9,8 @@ const router = express.Router();
 router.get("/view", userAuth, async (req, res) => {
     try {
         const userDetails = req.user;
-        const { firstName, lastName, emailId, age, gender, skills, about, photoUrl } = userDetails;
-        res.json({ messgae: "user profile", data: { firstName, lastName, emailId, age, gender, skills, about, photoUrl } })
+        const { firstName, lastName, emailId, age, gender, skills, about, photoUrl, _id } = userDetails;
+        res.json({ messgae: "user profile", data: { firstName, lastName, emailId, age, gender, skills, about, photoUrl, _id } })
     } catch (err) {
         res.status(400).send("Error: " + err)
     }
