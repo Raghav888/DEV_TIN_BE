@@ -3,6 +3,8 @@ const crypto = require('crypto');
 const cookie = require("cookie");
 const jwt = require("jsonwebtoken");
 const User = require('../models/user');
+const Chat = require('../models/chat');
+const ConnectionRequestModel = require('../models/connectionRequest');
 
 const getHasdedRoomId = (toUserId, fromUserId) => {
     const hash = crypto.createHash('sha256');
@@ -48,19 +50,56 @@ const initilizeSocket = (server) => {
     io.on("connection", (socket) => {
 
         socket.on("joinChat", ({ toUserId }) => {
+            if (!socket.user) return;
             // should create unique room id for every pair of users, sort is imp as it will always give same id for both users
             const uniqueRoomId = getHasdedRoomId(toUserId, socket.user._id.toString());
             socket.join(uniqueRoomId);
         });
 
-        socket.on("sendMessage", (data) => {
-            const { toUserId, message } = data;
-            const uniqueRoomId = getHasdedRoomId(toUserId, socket.user._id.toString());
-            io.to(uniqueRoomId).emit("receiveMessage", {
-                message,
-                fromUserId: socket.user._id.toString(),
-                firstName: socket.user.firstName,
-            });
+        socket.on("sendMessage", async (data) => {
+            try {
+                const { toUserId, message } = data;
+                const fromUserId = socket.user._id.toString();
+                const uniqueRoomId = getHasdedRoomId(toUserId, fromUserId);
+
+                const areBothUsersFriends = await ConnectionRequestModel.findOne({
+                    $or: [
+                        { requestFromId: toUserId, requestToId: fromUserId, status: "accepted" },
+                        { requestFromId: fromUserId, requestToId: toUserId, status: "accepted" },
+                    ]
+                });
+
+                if (!areBothUsersFriends) {
+                    console.error("Users are not connected. Message not sent.");
+                    return;
+                }
+
+                let chat = await Chat.findOne({
+                    members: { $all: [toUserId, socket.user._id] }
+                });
+
+                if (!chat) {
+                    chat = await new Chat({
+                        members: [toUserId, socket.user._id],
+                        messages: [],
+                    });
+                }
+
+                chat.messages.push({
+                    sender: socket.user._id,
+                    text: message,
+                });
+
+                await chat.save();
+                io.to(uniqueRoomId).emit("receiveMessage", {
+                    message,
+                    fromUserId: socket.user._id.toString(),
+                    firstName: socket.user.firstName,
+                });
+
+            } catch (err) {
+                console.error("Error saving message to DB:", err);
+            }
         });
 
         socket.on("disconnect", () => {

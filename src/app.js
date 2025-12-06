@@ -22,6 +22,7 @@ const authRouter = require('./routes/auth');
 const profileRouter = require('./routes/profile');
 const requestsRouter = require('./routes/requests');
 const userRouter = require('./routes/user');
+const chatRouter = require('./routes/chat');
 const initilizeSocket = require('./utils/socket');
 
 // for socket io we need to create server like this
@@ -33,9 +34,7 @@ app.use('/auth', authRouter);
 app.use('/profile', profileRouter)
 app.use('/requests', requestsRouter)
 app.use('/user', userRouter);
-
-
-
+app.use('/chats', chatRouter);
 
 // doing in this way so that first our db is connected then only server starts listening.
 connectDB().then(() => {
